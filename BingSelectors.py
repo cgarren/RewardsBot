@@ -1,4 +1,4 @@
-xpath = { 'signInLink': "//div[contains(@class, 'msame_unauth')]",
+xpath = { 'signInLink': "//*[text()='SIGN IN WITH MICROSOFT']",
           'usernameBox': ".//*[@id='i0116']",
           'pswdBox': ".//*[@id='i0118']",
           'submit': ".//*[@id='idSIButton9']", #needs to be clicked after username input and after password input
@@ -8,7 +8,8 @@ xpath = { 'signInLink': "//div[contains(@class, 'msame_unauth')]",
           'searchButtonMobile': ".//*[@id='sbBtn']",
 
           # Find a better, more portable way to describe this xpath
-          'searchLink': "//*[@id='offer-evergreen_ENUS_search_level2_PC_JAN18']",
+          #'searchLink': "//*[@id='offer-evergreen_ENUS_search_level2_PC_JAN18']",
+          'searchLink': "//*[@id='sb_form_q']",
           'searchLinkMobile': "//*[@id='offer-evergreen_ENUS_search_level2_Mobile_JAN18']",
           'startQuizButton': "//*[@id='rqStartQuiz']",
           'draggableQuizBox': "//*[@id='dragOptionContainer']",

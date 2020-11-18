@@ -4,6 +4,9 @@
 # without you having to lift a finger :) Might take an argument as to number of
 # searches in the future. Who knows?
 
+#Type this into Terminal: 
+#python3 bing.py cgarren18@icloud.com Cg2018066
+
 import time
 import os
 import random
@@ -11,7 +14,9 @@ import argparse
 import getpath
 
 from selenium import webdriver
+from selenium.webdriver.common.keys import Keys
 from selenium.common.exceptions import NoSuchElementException
+from selenium.common.exceptions import UnexpectedAlertPresentExeption
 from selenium.webdriver.common.action_chains import ActionChains
 # Want to replace the time.sleep calls with webdriverwait, but not yet
 #from selenium.webdriver.common.by import By
@@ -19,8 +24,8 @@ from selenium.webdriver.common.action_chains import ActionChains
 #from selenium.webdriver.support import expected_conditions as EC
 from BingSelectors import xpath
 
-numSearches = 30
-numMobileSearches = 20
+numSearches = 60 
+numMobileSearches = 22
 authPause = 10
 searchPause = 5
 
@@ -55,12 +60,19 @@ def send(xpath, value):
         print("Couldn't find element specified by xpath: {x}".format(x=xpath))
     elem.send_keys(value)
 
-def click(xpath):
+def click(path):
     try:
-        elem = driver.find_element_by_xpath(xpath)
+        elem = driver.find_element_by_xpath(path)
+        elem.click()
     except NoSuchElementException:
-        print("Couldn't find element specified by xpath: {x}".format(x=xpath))
-    elem.click()
+        print("Couldn't find element specified by xpath: {x}".format(x=path))
+        try:
+        	elem = driver.find_element_by_xpath(xpath['searchButtonMobile'])
+        	elem.click()
+        except NoSuchElementException:
+        	print("Couldn't find element specified by xpath: {x}".format(x=path))
+        	elem = driver.find_element_by_xpath(xpath['searchButton'])
+        	elem.click()
 
 def click_CSS(selector):
     try:
@@ -86,16 +98,18 @@ def exists(xpath):
 
 # Authenticate Bing Rewards Account
 def login():
-    driver.maximize_window()
-    driver.get(starturl)
-    click(xpath['signInLink'])
-    time.sleep(authPause/2)
-    send(xpath['usernameBox'], username)
-    click(xpath['submit'])
-    time.sleep(authPause/4)
-    send(xpath['pswdBox'], password)
-    click(xpath['submit'])
-    time.sleep(authPause)
+	print ('Maximizing window...')
+	driver.maximize_window()
+	driver.get(starturl)
+	print ('Logging in...')
+	click(xpath['signInLink'])
+	time.sleep(authPause/2)
+	send(xpath['usernameBox'], username)
+	click(xpath['submit'])
+	time.sleep(authPause/4)
+	send(xpath['pswdBox'], password)
+	click(xpath['submit'])
+	time.sleep(authPause)
 
 def solve_quiz(numPoints):
     numQuestions = numPoints//10
@@ -151,63 +165,112 @@ def drag_and_drop_elements(elements):
     ActionChains(driver).drag_and_drop(elemToDrag, elemToDropOn).perform()
 
 def get_offer_points():
-    allOfferCardTitles = driver.find_elements_by_xpath(xpath['rewardsHomeCardTitle'])
-    allOfferCardStatuses = driver.find_elements_by_xpath(xpath['rewardsHomeCardCheckmarkOrChevron'])
-    allVisibleOfferCardStatuses = [x for x in allOfferCardStatuses if x.is_displayed()]
+	print ("0")
+	allOfferCardTitles = driver.find_elements_by_xpath(xpath['rewardsHomeCardTitle'])
+	allOfferCardStatuses = driver.find_elements_by_xpath(xpath['rewardsHomeCardCheckmarkOrChevron'])
+	print (allOfferCardStatuses)
+	allVisibleOfferCardStatuses = [x for x in allOfferCardStatuses if x.is_displayed()]
 
-    allOfferCardPoints = driver.find_elements_by_xpath(xpath['rewardsHomeCardPoints'])
-    allVisibleOfferCardPoints = [x for x in allOfferCardPoints if x.is_displayed()]
+	allOfferCardPoints = driver.find_elements_by_xpath(xpath['rewardsHomeCardPoints'])
+	allVisibleOfferCardPoints = [x for x in allOfferCardPoints if x.is_displayed()]
 
-    for i in range(0,len(allVisibleOfferCardStatuses)):
-        elem = allVisibleOfferCardStatuses[i]
-        if "mee-icon-ChevronRight" in elem.get_attribute("class"):
-            titleElem = allOfferCardTitles[i]
+	for i in range(0,len(allVisibleOfferCardStatuses)):
+		elem = allVisibleOfferCardStatuses[i]
+		print ("1")
+		if "mee-icon-ChevronRight" in elem.get_attribute("class"):
+			titleElem = allOfferCardTitles[i]
+			print ("2")
 
-            # Got to clean this up
-            if "Quiz" in titleElem.text or "quiz" in titleElem.text:
-                numPointsStr = allVisibleOfferCardPoints[i].text.replace(' POINTS','')
-                elem.click()
-                time.sleep(searchPause)
-                currTab = driver.window_handles[0]
-                newTab = driver.window_handles[-1]
-                driver.switch_to_window(newTab)
-                click(xpath['startQuizButton'])
-                solve_quiz(int(numPointsStr))
-                driver.close()
-                driver.switch_to_window(currTab)
-                get_offer_points()
-                return
-            else:
-                elem.click()
-                time.sleep(searchPause)
-                currTab = driver.window_handles[0]
-                newTab = driver.window_handles[-1]
-                driver.switch_to_window(newTab)
-                driver.close()
-                driver.switch_to_window(currTab)
-                get_offer_points()
-                return
+			# Got to clean this up
+			if "Quiz" in titleElem.text or "quiz" in titleElem.text:
+				print ("3")
+				numPointsStr = allVisibleOfferCardPoints[i].text.replace(' POINTS','')
+				elem.click()
+				time.sleep(searchPause)
+				currTab = driver.window_handles[0]
+				newTab = driver.window_handles[-1]
+				driver.switch_to_window(newTab)
+				click(xpath['startQuizButton'])
+				solve_quiz(int(numPointsStr))
+				driver.close()
+				driver.switch_to_window(currTab)
+				get_offer_points()
+				return
+			else:
+				print ("4")
+				elem.click()
+				time.sleep(searchPause)
+				currTab = driver.window_handles[0]
+				newTab = driver.window_handles[-1]
+				driver.switch_to_window(newTab)
+				driver.close()
+				driver.switch_to_window(currTab)
+				return
+
+def isAlertPresent():
+    try:
+        driver.switch_to.alert()
+        return True
+    except:
+        return False
 
 def visit_PC_search_page():
-    click(xpath['searchLink'])
-    time.sleep(authPause/2)
+	print ('Going to bing...')
+	home_tab = driver.window_handles[0]
+	
+	#New Tab
+	driver.find_element_by_tag_name('body').send_keys(Keys.COMMAND + 't')
+
+	driver.switch_to.window(driver.window_handles[-1])
+
+	driver.get('https://www.bing.com/')
+	click(xpath["searchLink"])
+	time.sleep(authPause/2)
 
     # switches focus to the new tab where the search window has opened up
-    newTab = driver.window_handles[-1]
-    driver.switch_to_window(newTab)
+    #newTab = driver.window_handles[-1]
+    #driver.switch_to.window(newTab)
 
 def visit_mobile_search_page():
     # click(xpath['searchLinkMobile'])
+    driver.get('https://www.bing.com/')
     click(xpath['searchLink'])    
     time.sleep(authPause/2)
 
 def do_searches(numSearches, searchQuries):
     for _ in range(0, numSearches):
         clear(xpath['search'])
-        send(xpath['search'], searchQuries.pop())
+        search = xpath['search']
+        querie = searchQuries.pop()
+        send(search, querie)
         click(xpath['searchButton'])
+        print ('Searched for:', querie)
         time.sleep(searchPause)
 
+def do_mobile_searches(numSearches, searchQuries):
+    x = 0
+    for _ in range(0, numSearches):
+    	present = isAlertPresent()
+    	if present == True:
+    		alert = driver.switchTo().alert()
+    		alert_text = alert.getText()
+    		print ("Accepting alert that says: ", alert_text)
+    		alert.accept()
+    	clear(xpath['search'])
+    	search = xpath['search']
+    	querie = searchQuries.pop()
+    	send(search, querie)
+    	if x <= 1:
+    		click(xpath['searchButtonMobile'])
+    		 #print('Clicked mobile button')
+    		 #click(xpath['searchButtonMobile'])
+    	else:
+    		#print ('Alert present?', present)
+    		click(xpath['searchButton'])
+    	x += 1
+    	#print (x)
+    	print ('Searched for:', querie)
+    	time.sleep(searchPause)
 
 # Get search terms
 terms = get_random_queries(numSearches+numMobileSearches)
@@ -218,10 +281,13 @@ login()
 get_offer_points()
 visit_PC_search_page()
 do_searches(numSearches, terms)
-driver.close()
-currTab = driver.window_handles[0]
-driver.switch_to_window(currTab)
-driver.close()
+#Close Tab
+#driver.find_element_by_tag_name('body').send_keys(Keys.COMMAND + 'w')
+print('Switching to mobile searches...')
+#currTab = driver.window_handles[0]
+#driver.switch_to.window(currTab)
+driver.quit()
+#driver.find_element_by_tag_name('body').send_keys(Keys.COMMAND + 'w')
 
 # Perform Mobile searches
 profile = webdriver.FirefoxProfile()
@@ -229,5 +295,6 @@ profile.set_preference("general.useragent.override", userAgentString)
 driver = webdriver.Firefox(profile)
 login()
 visit_mobile_search_page()
-do_searches(numMobileSearches, terms)
-driver.close()
+do_mobile_searches(numMobileSearches, terms)
+driver.quit()
+
